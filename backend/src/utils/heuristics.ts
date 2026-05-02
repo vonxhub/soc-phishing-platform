@@ -1,5 +1,6 @@
 import { URL } from 'url';
 import * as psl from 'psl';
+import { levenshteinEditDistance } from 'levenshtein-edit-distance';
 
 export function extractUrls(text: string): string[] {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -12,13 +13,33 @@ export function isTyposquatting(url: string): boolean {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname;
     const parsed = psl.parse(hostname) as any;
-    if (parsed.domain && parsed.domain !== hostname) {
-      // This is a very basic check. A real typosquatting detection would involve
-      // comparing against known legitimate domains and using various algorithms.
-      // For now, we'll just flag if the hostname is not the same as the parsed domain
-      // (e.g., a subdomain that looks like a different domain).
-      return true;
+    if (!parsed.domain) return false;
+
+    const domain = parsed.sld; // second-level domain
+    const popularDomains = ['google', 'microsoft', 'apple', 'amazon', 'facebook', 'netflix', 'paypal', 'github'];
+
+    for (const popular of popularDomains) {
+      if (domain === popular) return false;
+      const distance = levenshteinEditDistance(domain, popular);
+      // If the domain is very similar to a popular one (distance 1 or 2), flag it
+      if (distance > 0 && distance <= 2) {
+        return true;
+      }
     }
+
+    // Check for common typosquatting patterns like 'g00gle' or 'paypa1'
+    const substitutions: { [key: string]: string } = { '0': 'o', '1': 'l', '3': 'e', '4': 'a', '5': 's' };
+    let normalizedDomain = domain;
+    for (const [char, sub] of Object.entries(substitutions)) {
+      normalizedDomain = normalizedDomain.replace(new RegExp(char, 'g'), sub);
+    }
+
+    if (normalizedDomain !== domain) {
+      for (const popular of popularDomains) {
+        if (normalizedDomain === popular) return true;
+      }
+    }
+
     return false;
   } catch {
     return false;
