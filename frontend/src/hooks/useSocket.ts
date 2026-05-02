@@ -6,7 +6,7 @@ export function useSocket(token: string | null) {
 
   useEffect(() => {
     if (!token) return;
-    const socket = io(import.meta.env.VITE_API_URL || '', {
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3001', {
       auth: { token },
     });
     socketRef.current = socket;
