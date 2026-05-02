@@ -24,9 +24,12 @@ services:
       - redis
     ports:
       - "3001:3001"
+    volumes:
+      - screenshots:/app/screenshots
     networks:
       - internal
       - frontend
+      - sandbox_net
 
   sandbox:
     build:
@@ -36,11 +39,13 @@ services:
       - seccomp:chrome-seccomp.json
     cap_drop:
       - ALL
-    read_only: true
+    read_only: false        # Needs to write screenshots
     tmpfs:
       - /tmp
+    volumes:
+      - screenshots:/app/screenshots
     networks:
-      sandbox_net:          # not internal -> DNS/outbound available
+      - sandbox_net
     restart: unless-stopped
 
   nginx:
@@ -62,3 +67,4 @@ networks:
     driver: bridge          # isolated from internal & frontend, can access internet
 volumes:
   pgdata:
+  screenshots:
