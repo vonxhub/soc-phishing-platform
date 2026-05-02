@@ -73,7 +73,6 @@ async function callQwen(prompt: string, retries = 2): Promise<string> {
         continue;
       }
       // Other errors, retry
-      const axiosErr = err as AxiosError;
       if (axiosErr.response?.status === 401) {
         const err = new Error('AI analysis service authentication failed') as any;
         err.status = 503;
