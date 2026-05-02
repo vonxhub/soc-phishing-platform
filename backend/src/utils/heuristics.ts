@@ -48,7 +48,6 @@ export function isTyposquatting(url: string): boolean {
 
 export async function analyzeDomainAge(url: string): Promise<number> {
   // This is a placeholder. Real domain age analysis would require WHOIS lookups
-  // or external APIs, which are outside the scope of this example.
-  // For demonstration, we'll return a random age between 1 and 3650 days.
-  return Math.floor(Math.random() * 3650) + 1;
+  // or external APIs. For now, we return -1 to indicate "unknown".
+  return -1;
 }

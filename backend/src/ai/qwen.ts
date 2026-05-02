@@ -43,6 +43,12 @@ const responseSchema = z.object({
 });
 
 async function callQwen(prompt: string, retries = 2): Promise<string> {
+  if (!QWEN_API_KEY || QWEN_API_KEY === 'your_qwen_api_key') {
+    const err = new Error('AI analysis service not configured') as any;
+    err.status = 503;
+    throw err;
+  }
+
   for (let i = 0; i <= retries; i++) {
     try {
       const res = await client.post('/chat/completions', {
@@ -67,6 +73,12 @@ async function callQwen(prompt: string, retries = 2): Promise<string> {
         continue;
       }
       // Other errors, retry
+      const axiosErr = err as AxiosError;
+      if (axiosErr.response?.status === 401) {
+        const err = new Error('AI analysis service authentication failed') as any;
+        err.status = 503;
+        throw err;
+      }
       logger.warn(`Qwen API attempt ${i+1} failed: ${err}`);
     }
   }

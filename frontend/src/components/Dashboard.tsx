@@ -120,9 +120,8 @@ export default function Dashboard() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
-                <th style={{ padding: '10px' }}>Type</th>
-                <th style={{ padding: '10px' }}>Label</th>
                 <th style={{ padding: '10px' }}>Severity</th>
+                <th style={{ padding: '10px' }}>Message</th>
                 <th style={{ padding: '10px' }}>Status</th>
                 <th style={{ padding: '10px' }}>Action</th>
               </tr>
@@ -130,12 +129,11 @@ export default function Dashboard() {
             <tbody>
               {alerts.map((alert: any) => (
                 <tr key={alert.id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '10px' }}>{alert.type}</td>
-                  <td style={{ padding: '10px' }}>{alert.label}</td>
                   <td style={{ padding: '10px' }}>{alert.severity}</td>
-                  <td style={{ padding: '10px' }}>{alert.status}</td>
+                  <td style={{ padding: '10px' }}>{alert.message}</td>
+                  <td style={{ padding: '10px' }}>{alert.acknowledged ? 'Acknowledged' : 'Open'}</td>
                   <td style={{ padding: '10px' }}>
-                    {alert.status === 'open' && (
+                    {!alert.acknowledged && (
                       <button onClick={() => acknowledgeAlert(alert.id)} style={{ padding: '2px 5px' }}>Acknowledge</button>
                     )}
                   </td>

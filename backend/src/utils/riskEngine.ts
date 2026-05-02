@@ -18,8 +18,8 @@ export async function calculateRiskScore(aiResult: any, enrichment: any, meta: a
   // Typosquatting: +15
   if (enrichment.typosquatted) score += 15;
 
-  // Domain age < 30 days: +10
-  if (enrichment.domainAgeDays < 30) score += 10;
+  // Domain age < 30 days: +10 (only if age is known and > 0)
+  if (enrichment.domainAgeDays > 0 && enrichment.domainAgeDays < 30) score += 10;
 
   // Domain historical risk (if available)
   if (meta.urls.length > 0) {

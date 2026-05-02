@@ -7,16 +7,33 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 
 export async function register(username: string, password: string) {
   const password_hash = await bcrypt.hash(password, 10);
-  await pool.query('INSERT INTO users (username, password_hash) VALUES ($1, $2)', [username, password_hash]);
+  try {
+    await pool.query('INSERT INTO users (username, password_hash) VALUES ($1, $2)', [username, password_hash]);
+  } catch (err: any) {
+    if (err.code === '23505') { // Unique violation in PostgreSQL
+      const error = new Error('Username already exists') as any;
+      error.status = 409;
+      throw error;
+    }
+    throw err;
+  }
 }
 
 export async function login(username: string, password: string) {
   const { rows } = await pool.query('SELECT id, password_hash FROM users WHERE username = $1', [username]);
-  if (!rows[0]) throw new Error('User not found');
+  if (!rows[0]) {
+    const err = new Error('Invalid credentials') as any;
+    err.status = 401;
+    throw err;
+  }
 
   const user = rows[0];
   const isValid = await bcrypt.compare(password, user.password_hash);
-  if (!isValid) throw new Error('Invalid credentials');
+  if (!isValid) {
+    const err = new Error('Invalid credentials') as any;
+    err.status = 401;
+    throw err;
+  }
 
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
   return token;

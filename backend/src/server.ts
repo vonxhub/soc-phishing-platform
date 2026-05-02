@@ -16,8 +16,8 @@ import { logger } from './utils/logger';
 import { setupSocketHandlers } from './realtime/socketManager';
 
 // Validate JWT_SECRET on startup
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 64) {
-  logger.error('JWT_SECRET must be at least 64 hex characters (256 bits)');
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  logger.error('JWT_SECRET must be at least 32 characters');
   process.exit(1);
 }
 
@@ -31,6 +31,9 @@ app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL }));
 app.use(express.json({ limit: '50kb' }));
 app.use(rateLimit({ windowMs: 60_000, max: 200 }));
+
+// Health check
+app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 // Auth
 app.post('/api/login', rateLimit({ windowMs: 60_000, max: 5 }), async (req, res, next) => {
@@ -126,12 +129,14 @@ io.use((socket, next) => {
 setupSocketHandlers(io);
 
 // Global Zod / generic error handler
-app.use((err: Error, _req: any, res: any, _next: any) => {
+app.use((err: any, _req: any, res: any, _next: any) => {
   logger.error(err);
   if (err instanceof z.ZodError) {
     return res.status(400).json({ error: 'Invalid request', details: err.errors });
   }
-  res.status(500).json({ error: 'Internal server error' });
+  const status = err.status || 500;
+  const message = err.status ? err.message : 'Internal server error';
+  res.status(status).json({ error: message });
 });
 
 // ─── Startup ───
