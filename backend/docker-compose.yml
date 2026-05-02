@@ -49,11 +49,15 @@ services:
     restart: unless-stopped
 
   nginx:
-    image: nginx:alpine
+    build:
+      context: ../frontend
+      dockerfile: ../backend/Dockerfile.nginx
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
       - "80:80"
+    depends_on:
+      - backend
     networks:
       - frontend
 
